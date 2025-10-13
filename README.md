@@ -37,7 +37,7 @@ include ':app'
 
 #### 2. build.grade (app):
 ```groovy
-   minSdk 28 //min sdk should be 26
+   minSdk 28 //min sdk should be 28
    
    dependencies {
          implementation 'io.surepass.sdk:esign-android-sdk-v2:1.0.5'
