@@ -40,7 +40,7 @@ include ':app'
    minSdk 28 //min sdk should be 28
    
    dependencies {
-         implementation 'io.surepass.sdk:esign-android-sdk-v2:1.0.5'
+         implementation 'io.surepass.sdk:esign-android-sdk-v2:1.0.6'
    }
 ```
 Make sure to sync your project after adding the dependency.
