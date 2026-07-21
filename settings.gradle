@@ -2,7 +2,6 @@ pluginManagement {
     repositories {
         google()
         mavenCentral()
-        jcenter()
         gradlePluginPortal()
     }
 }
@@ -10,14 +9,23 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
-        jcenter()
         mavenCentral()
 
+        // The SDK and the two vendor eSign AARs it depends on are all published here. Note this is
+        // esign-sample-app, not esign-android-sdk-v2 -- the SDK's source repo is private, and a
+        // GitHub package inherits the visibility of the repo it is linked to, so the packages are
+        // published from this public one instead. Pointing at the source repo returns 401.
+        //
+        // Credentials go in ~/.gradle/gradle.properties, never in this file -- it is public.
+        // A token with read:packages is enough.
+        //
+        //     gpr.user=your-github-username
+        //     gpr.key=ghp_...
         maven {
-            url = "https://maven.pkg.github.com/surepassio/esign-android-sdk-v2"
+            url = "https://maven.pkg.github.com/surepassio/esign-sample-app"
             credentials {
-                username = ""
-                password = ""
+                username = System.getenv("GITHUB_ACTOR") ?: providers.gradleProperty("gpr.user").getOrNull()
+                password = System.getenv("GITHUB_TOKEN") ?: providers.gradleProperty("gpr.key").getOrNull()
             }
         }
     }
