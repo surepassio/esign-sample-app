@@ -26,7 +26,6 @@ class MainActivity : AppCompatActivity() {
         registerActivityForResult()
 
         binding.btnGetStarted.setOnClickListener {
-//            val token = binding.etApiToken.text.toString()
             val token = "YOUR TOKEN"
             val env = "PREPROD"
             openActivity(env, token)
@@ -45,10 +44,7 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun openActivity(env: String, token: String) {
-        val intent = Intent(this, InitSDK::class.java)
-        intent.putExtra("token", token)
-        intent.putExtra("env", env)
-        eSignActivityResultLauncher.launch(intent)
+        eSignActivityResultLauncher.launch(InitSDK.newIntent(this, token, env))
     }
 
     private fun showToast(message: String) {
@@ -63,7 +59,7 @@ class MainActivity : AppCompatActivity() {
                     val resultCode = result.resultCode
                     val data = result.data
                     if (resultCode == RESULT_OK && data != null) {
-                        val eSignResponse = data.getStringExtra("signedResponse")
+                        val eSignResponse = data.getStringExtra(InitSDK.EXTRA_SIGNED_RESPONSE)
                         Log.e("MainActivity", "eSign Response $eSignResponse")
                         showResponse(eSignResponse)
                     }
