@@ -1,118 +1,83 @@
-# Esign Android SDK - V2 Sample App
+# eSign Android SDK v2: Sample App
 
-Sample application for eSign Android SDK - V2.
+A minimal app integrating the Surepass eSign SDK (`io.surepass.sdk:esign-android-sdk-v2`).
 
-### Step to use the SDK below as well:
+## Requirements
 
-#### 1. settings.gradle :
-```gradle
-    pluginManagement {
-        repositories {
-            google()
-            mavenCentral()
-            gradlePluginPortal()
-        }
-    }
-    dependencyResolutionManagement {
-        repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-        repositories {
-            google()
-            mavenCentral()
-            maven {
-                url = "https://maven.pkg.github.com/surepassio/esign-sample-app"
-                credentials {
-                    username = providers.gradleProperty("gpr.user").getOrNull()
-                    password = providers.gradleProperty("gpr.key").getOrNull()
-                }
+AGP 8.6, Gradle 8.7, Kotlin 1.9.25, Java 17 (`jvmTarget` 17), `compileSdk` 35, `minSdk` 28.
+
+## Setup
+
+**settings.gradle**: the SDK is on GitHub Packages. Put a GitHub token with `read:packages` in
+`~/.gradle/gradle.properties` as `gpr.user` / `gpr.key`.
+
+```groovy
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url = "https://maven.pkg.github.com/surepassio/esign-sample-app"
+            credentials {
+                username = providers.gradleProperty("gpr.user").getOrNull()
+                password = providers.gradleProperty("gpr.key").getOrNull()
             }
         }
     }
-rootProject.name = "ESign Sample App"
-include ':app'
+}
 ```
 
-#### 2. build.grade (app):
+**app/build.gradle**
+
 ```groovy
-   compileSdk 35
-   minSdk 28 //min sdk should be 28
-
-   compileOptions {
-       sourceCompatibility JavaVersion.VERSION_17
-       targetCompatibility JavaVersion.VERSION_17
-   }
-   kotlinOptions {
-       jvmTarget = '17'
-   }
-
-   dependencies {
-         implementation 'io.surepass.sdk:esign-android-sdk-v2:1.0.7'
-   }
+implementation 'io.surepass.sdk:esign-android-sdk-v2:1.0.8'
 ```
-Make sure to sync your project after adding the dependency.
 
-1.0.7 raises the toolchain, so upgrading from 1.0.6 is not just a version bump. The SDK is built
-against AGP 8.6 / Kotlin 1.9.25 / Java 17 / compileSdk 35, and your project has to meet that:
-
-| | 1.0.6 | 1.0.7 |
-|---|---|---|
-| Android Gradle Plugin | 8.0 | **8.6** |
-| Gradle wrapper | 8.0 | **8.7** |
-| Kotlin plugin | 1.8.0 | **1.9.25** |
-| Java / `jvmTarget` | 8 | **17** |
-| `compileSdk` | 34 | **35** |
-| `minSdk` | 28 | 28 (unchanged) |
-
-#### 3. AndroidManifest.xml (app):
-
-Required. The bundled Protean AAR declares `android:theme` on its own `<application>` element, so
-the manifest merger reports a conflict with yours and the build fails. Add `tools:replace` to
-resolve it:
+**AndroidManifest.xml**: the Protean AAR declares its own theme, so replace it.
 
 ```xml
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-
-    <uses-permission android:name="android.permission.INTERNET" />
-
-    <application
-        android:theme="@style/Theme.YourApp"
-        tools:replace="android:theme">
+<application
+    android:theme="@style/Theme.YourApp"
+    tools:replace="android:theme">
 ```
 
-Overriding it is safe: the SDK pins each of its own and the vendors' screens to its internal theme
-individually, so your theme applies to your UI only.
+eMudhra sets `android:networkSecurityConfig="@xml/network_security_config"`. If your config has
+another name, add `android:networkSecurityConfig` to `tools:replace`; with none, eMudhra's applies
+to your whole app.
 
-#### 4. Inside Application:
+## Usage
+
 ```kotlin
-   binding.btnGetStarted.setOnClickListener {
-        val token = "YOUR TOKEN"
-        val env = InitSDK.ENV_PREPROD   // or InitSDK.ENV_PROD
-        openActivity(env, token)
-    }
-```
-SDK will be started from openActivity function
-```kotlin
-    import io.surepass.esign.ui.activity.InitSDK
+private val eSign = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+    val json = result.data?.getStringExtra(InitSDK.EXTRA_SIGNED_RESPONSE)
+}
 
-    private fun openActivity(env: String, token: String) {
-        eSignActivityResultLauncher.launch(InitSDK.newIntent(this, token, env))
-    }
+eSign.launch(InitSDK.newIntent(this, token, InitSDK.ENV_PREPROD)) // or InitSDK.ENV_PROD
 ```
-Response can be obtained in
-```kotlin
-   private fun registerActivityForResult() {
-        eSignActivityResultLauncher =
-            registerForActivityResult(
-                ActivityResultContracts.StartActivityForResult(),
-                ActivityResultCallback { result ->
-                    val resultCode = result.resultCode
-                    val data = result.data
-                    if (resultCode == RESULT_OK && data != null) {
-                        val eSignResponse = data.getStringExtra(InitSDK.EXTRA_SIGNED_RESPONSE)
-                        Log.e("MainActivity", "eSign Response $eSignResponse")
-                        showResponse(eSignResponse)
-                    }
-                })
-    }
-```
-For better clarification you can check the code details inside the project
+
+The SDK always finishes with `RESULT_OK` and a JSON envelope: `status_code`, `data`, `error`,
+`message`.
+
+| `status_code` | Meaning |
+|---|---|
+| `200` | Signed. `data` is the signed document URL, or `""` when downloads are disabled. |
+| `433` | The user exited before signing. |
+| `401` | Missing or invalid token/env, an expired session, or no connection at start-up. |
+| `400`, `422` | The backend rejected the session's prefilled mobile number. |
+| `403` | Too many attempts. |
+| `404`, other `4xx` | The backend rejected the session. |
+| `450` | No usable signing backend for the session. |
+| `5xx` | The backend failed at start-up. |
+| `501` | Signing failed in a way a retry won't fix, or Protean rejected the environment (NSDL signs in `PROD` only). |
+
+## Notes
+
+- The OTP is read from its SMS with the user's consent. This needs Google Play services; without
+  them the user types the code.
+- eMudhra signing runs only on ARM devices.
+- The SDK sends Surepass the device model and a random per-install ID, for your Play Data safety form.
+- R8/ProGuard needs no extra rules.
+
+## Running the sample
+
+Set `gpr.user` / `gpr.key`, put your token in `MainActivity` (`"YOUR TOKEN"`), and run `app`.
