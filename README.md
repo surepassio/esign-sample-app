@@ -30,7 +30,7 @@ dependencyResolutionManagement {
 **app/build.gradle**
 
 ```groovy
-implementation 'io.surepass.sdk:esign-android-sdk-v2:1.0.8'
+implementation 'io.surepass.sdk:esign-android-sdk-v2:1.0.9'
 ```
 
 **AndroidManifest.xml**: the Protean AAR declares its own theme, so replace it.
@@ -75,7 +75,6 @@ The SDK always finishes with `RESULT_OK` and a JSON envelope: `status_code`, `da
 - The OTP is read from its SMS with the user's consent. This needs Google Play services; without
   them the user types the code.
 - eMudhra signing runs only on ARM devices.
-- The SDK sends Surepass the device model and a random per-install ID, for your Play Data safety form.
 - R8/ProGuard needs no extra rules.
 
 ## Running the sample
