@@ -11,11 +11,6 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
 
-        // The SDK and the two vendor eSign AARs it depends on are all published here. Note this is
-        // esign-sample-app, not esign-android-sdk-v2 -- the SDK's source repo is private, and a
-        // GitHub package inherits the visibility of the repo it is linked to, so the packages are
-        // published from this public one instead. Pointing at the source repo returns 401.
-        //
         // Credentials go in ~/.gradle/gradle.properties, never in this file -- it is public.
         // A token with read:packages is enough.
         //
@@ -30,5 +25,5 @@ dependencyResolutionManagement {
         }
     }
 }
-rootProject.name = "ESign Sample App"
+rootProject.name = "eSign"
 include ':app'
