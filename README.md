@@ -30,7 +30,7 @@ dependencyResolutionManagement {
 **app/build.gradle**
 
 ```groovy
-implementation 'io.surepass.sdk:esign-android-sdk-v2:1.0.9'
+implementation 'io.surepass.sdk:esign-android-sdk-v2:1.0.10'
 ```
 
 **AndroidManifest.xml**: the Protean AAR declares its own theme, so replace it.
